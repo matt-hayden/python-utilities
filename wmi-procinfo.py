@@ -19,6 +19,7 @@ wmi_Win32_Processor_VoltageCaps_bits = {
 def wmi_procinfo(args = None, machine = None):
 	sep = ": "
 	width = 25
+	hexformat = "%#0.8x"
 	c = wmi.WMI(machine)
 	for p in c.Win32_Processor():
 		print(p.DeviceID, ":")
@@ -34,8 +35,8 @@ def wmi_procinfo(args = None, machine = None):
 		# print("ConfigManagerUserConfig", sep, p.ConfigManagerUserConfig)
 		if p.CpuStatus:
 			print("CpuStatus".ljust(width), sep, p.CpuStatus)
-		print("CurrentClockSpeed".ljust(width), sep, "%d MHz" % p.CurrentClockSpeed)
-		print("CurrentVoltage".ljust(width), sep, "%1.3f" % (float(p.CurrentVoltage)/10.0) )
+		print("Current Clock Speed".ljust(width), sep, "%d MHz" % p.CurrentClockSpeed)
+		print("Current Voltage".ljust(width), sep, "%1.3f V" % (float(p.CurrentVoltage)/10.0) )
 		print("DataWidth".ljust(width), sep, p.DataWidth)
 		print("Description".ljust(width), sep, p.Description)
 		# print("ErrorCleared", sep, p.ErrorCleared)
@@ -46,16 +47,16 @@ def wmi_procinfo(args = None, machine = None):
 		elif p.Family != 2:
 			print("Family".ljust(width), sep, p.Family)
 		# print("InstallDate", sep, p.InstallDate)
-		print("L2CacheSize".ljust(width), sep, "%d KB" % p.L2CacheSize)
+		print("L2 Cache Size".ljust(width), sep, "%d KB" % p.L2CacheSize)
 		if p.L2CacheSpeed:
-			print("L2CacheSpeed".ljust(width), sep, p.L2CacheSpeed)
+			print("L2 Cache Speed".ljust(width), sep, "%d MHz" % p.L2CacheSpeed)
 		# p.L3CacheSize, p.L3CacheSpeed are Vista and later
 		# print("LastErrorCode", sep, p.LastErrorCode)
 		print("Level".ljust(width), sep, p.Level)
 		if p.LoadPercentage:
 			print("LoadPercentage".ljust(width), sep, float(p.LoadPercentage))
 		print("Manufacturer".ljust(width), sep, p.Manufacturer)
-		print("MaxClockSpeed".ljust(width), sep, "%d MHz" % p.MaxClockSpeed)
+		print("Max Clock Speed".ljust(width), sep, "%d MHz" % p.MaxClockSpeed)
 		print("Name".ljust(width), sep, p.Name)
 		print("NumberOfCores".ljust(width), sep, p.NumberOfCores)
 		print("NumberOfLogicalProcessors".ljust(width), sep, p.NumberOfLogicalProcessors)
@@ -65,9 +66,9 @@ def wmi_procinfo(args = None, machine = None):
 		# p.PowerManagementCapabilities[]
 		if p.ProcessorId:
 			eax1=int(p.ProcessorId[:8], 16)
-			print("Signature".ljust(width), sep, "%x" % eax1)
+			print("Signature".ljust(width), sep, hexformat % eax1)
 			edx=int(p.ProcessorId[-8:], 16)
-			print("Features".ljust(width), sep, "%x" % edx)
+			print("Features".ljust(width), sep, hexformat % edx)
 		if p.ProcessorType != 2:
 			print("ProcessorType".ljust(width), sep, p.ProcessorType)
 		print("Revision".ljust(width), sep, p.Revision)
@@ -84,7 +85,7 @@ def wmi_procinfo(args = None, machine = None):
 			print("UpgradeMethod".ljust(width), sep, p.UpgradeMethod)
 		print("Version".ljust(width), sep, p.Version)
 		vcc = long(p.VoltageCaps)
-		VoltageCaps_decoded = [ "%1.3f" % v for k, v in wmi_Win32_Processor_VoltageCaps_bits.iteritems() if vcc & k ]
+		VoltageCaps_decoded = [ "%1.3f V" % v for k, v in wmi_Win32_Processor_VoltageCaps_bits.iteritems() if vcc & k ]
 		print("VoltageCaps".ljust(width), sep, ", ".join(VoltageCaps_decoded))
 		print()
 #
