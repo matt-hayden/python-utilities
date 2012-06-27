@@ -84,9 +84,13 @@ def wmi_procinfo(args = None, machine = None):
 		if p.UpgradeMethod not in (2, 6):
 			print("UpgradeMethod".ljust(width), sep, p.UpgradeMethod)
 		print("Version".ljust(width), sep, p.Version)
-		vcc = long(p.VoltageCaps)
-		VoltageCaps_decoded = [ "%1.3f V" % v for k, v in wmi_Win32_Processor_VoltageCaps_bits.iteritems() if vcc & k ]
-		print("VoltageCaps".ljust(width), sep, ", ".join(VoltageCaps_decoded))
+		if p.VoltageCaps:
+			try:
+				vcc = int(p.VoltageCaps)
+				VoltageCaps_decoded = [ "%1.3f V" % v for k, v in wmi_Win32_Processor_VoltageCaps_bits.iteritems() if vcc & k ]
+				print("VoltageCaps".ljust(width), sep, ", ".join(VoltageCaps_decoded))
+			except:
+				print("VoltageCaps".ljust(width), sep, p.VoltageCaps)
 		print()
 #
 if __name__ == '__main__':
