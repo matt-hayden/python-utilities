@@ -10,10 +10,10 @@ def wmi_df(args = None, machine = None, print_block_size=1024.0):
 		free = disk.FreeMegabytes or 0
 		if disk.Name in sizes:
 			size = (sizes[disk.Name] or 0)/1024/1024
-			avail = size - free
+			used = size - free
 		else:
-			size, avail = 0, 0
-		print ''.join([ str(e).rjust(12) if e else ''.rjust(12) for e in (disk.Name, size, free, avail, "%d%%" % disk.PercentFreeSpace, disk.Caption) ] )
+			size, used = 0, 0
+		print ''.join([ str(e).rjust(12) if e else ''.rjust(12) for e in (disk.Name, size, used, free, "%d%%" % disk.PercentFreeSpace, disk.Caption) ] )
 	"""
 	for disk in c.Win32_LogicalDisk(): # DriveType=3):
 		size_bytes, avail_bytes = float(disk.Size or 0), float(disk.FreeSpace or 0)
