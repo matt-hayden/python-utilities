@@ -1,6 +1,6 @@
-#!env python
-### simple wrapper for WMI that emulates df
-from math import floor
+
+import wmi
+import sys
 
 DriveType_desc = {	0: "Unknown",
 					1: "No Root Directory",
@@ -10,28 +10,49 @@ DriveType_desc = {	0: "Unknown",
 					5: "Compact Disc",
 					6: "RAM Disk" }
 
-
-def wmi_df(args = None, machine = None, print_block_size=1024.0):
+def show_mounts(machine=None):
 	c = wmi.WMI(machine)
-	print("Filesystem", "%d-blocks" % print_block_size, "Used", "Available", "Capacity", "Caption")
-	for disk in c.Win32_LogicalDisk(DriveType=3):
-		size_bytes, avail_bytes = float(disk.Size or 0), float(disk.FreeSpace or 0)
-		size, avail = size_bytes/print_block_size, avail_bytes/print_block_size
-		use = size-avail
-		usepct=100.0*(use/size) if size > 0 else 1
-		print(disk.Name, 
-			  floor(size),
-			  use,
-			  avail,
-			  "%d%%" % usepct,
-			  disk.Caption
-			  )
-#
-if __name__ == '__main__':
-	try:
-		import wmi
-	except:
-		print("No WMI module")
-		print("\t$ pip install WMI")
-	else:
-		wmi_df()
+	print >> sys.stderr,  "Warning: logical partitions within a MSDOS extended partition appear to share DeviceID"
+	for pl in c.Win32_LogicalDiskToPartition():
+		Antecedent, Dependent = pl.Antecedent, pl.Dependent
+		flags = []
+		if Antecedent.BootPartition:
+			flags += "boot",
+		if Dependent.Compressed:
+			flags += "compressed",
+		if Antecedent.PrimaryPartition:
+			flags += "primary",
+		if Dependent.SupportsDiskQuotas and not Dependent.QuotasDisabled:
+			flags += "quota",
+		label = Dependent.VolumeName
+		print Antecedent.DeviceID, "["+label+"]" if label else "", "on", Dependent.DeviceID, "type", Dependent.FileSystem, "("+" ".join(flags)+")"
+def blkid(machine=None):
+	c = wmi.WMI(machine)
+	print >> sys.stderr,  "Warning: logical partitions within a MSDOS extended partition appear to share DeviceID"
+	for pl in c.Win32_LogicalDiskToPartition():
+		Antecedent, Dependent = pl.Antecedent, pl.Dependent
+		label = Dependent.VolumeName
+		print Antecedent.DeviceID, "["+label+"]" if label else "",":","Serial="+Dependent.VolumeSerialNumber, "Type="+Dependent.FileSystem
+def df(machine=None, block_divisor = 1024.0):
+	c = wmi.WMI(machine)
+	print >> sys.stderr, "Warning: logical partitions within a MSDOS extended partition appear to share DeviceID"
+	print "Filesystem".ljust(40), \
+		   "blocks".rjust(11), \
+		   "Used".rjust(11), \
+		   "Available".rjust(11), \
+		   "Capacity".rjust(8), \
+		   "Mounted on".ljust(10)
+	for pl in c.Win32_LogicalDiskToPartition():
+		Antecedent, Dependent = pl.Antecedent, pl.Dependent
+		# part_size = float(Antecedent.Size)/block_divisor # reports size of extended partition
+		fs_size, avail = float(Dependent.Size)/block_divisor, float(Dependent.FreeSpace)/block_divisor
+		used = fs_size - avail
+		capacity = 100.0*used/fs_size
+		label = Dependent.VolumeName
+		print (Antecedent.DeviceID + " ["+label+"]" if label else "").ljust(40), \
+			  ("%d" % fs_size).rjust(11), \
+			  ("%d" % used).rjust(11), \
+			  ("%d" % avail).rjust(11), \
+			  ("%d%%" % capacity).rjust(8), \
+			  Dependent.DeviceID.ljust(10)
+df(block_divisor=1024*1024)
