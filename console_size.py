@@ -4,6 +4,8 @@ Wrapper to get the size of the current terminal window. Availability:
 UNIX: curses and console tools
 Win32: PyWin32 undocumented
 """
+import os
+
 def get_win32console_size():
 	"""
 	http://nullege.com/codes/search/win32console.GetStdHandle
@@ -25,7 +27,7 @@ def get_termios_size():
 	"""
 	def ioctl_GWINSZ(fd):              #### TABULATION FUNCTIONS
 		try:                                ### Discover terminal width
-			import fcntl, termios, struct, os
+			import fcntl, termios, struct #, os
 			cr = struct.unpack('hh', fcntl.ioctl(fd, termios.TIOCGWINSZ, '1234'))
 		except:
 			return None
@@ -50,6 +52,9 @@ def get_terminal_size(default = None):
 	if not rc:
 		rc = get_win32console_size()
 	if not rc:
-		rc = env['LINES'], env['COLUMNS']
+		try:
+			rc = os.environ['LINES'], os.environ['COLUMNS']
+		except:
+			pass
 	return rc or default
 #
